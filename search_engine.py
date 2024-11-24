@@ -7,6 +7,7 @@ from score import Score
 import spacy
 import sqlite3
 import ujson
+from query_expansion import refine_query
 
 # Set up logging
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -206,15 +207,23 @@ if __name__ == '__main__':
     logging.debug("Init time: %s", time.time()-start)
     
     # Take user input for the query
-    query = input("Enter your search query: ").strip()
+    
+    raw_query = input("Enter your search query: ").strip()
+
+    # Refine the query using `refine_query` function
+    logging.debug("Refining query...")
+    refined_query = refine_query(raw_query)
+    logging.debug(f"Refined Query: {refined_query}")
     
     start = time.time()
-    engine.buildQuery(query)
-    logging.debug("buildQuery time: %s", time.time()-start)
+    engine.buildQuery(refined_query)  # Pass refined query to `buildQuery`
+    logging.debug("buildQuery time: %s", time.time() - start)
     
     try:
-        result = engine.computeScore.bm25()
+        result = engine.searchByMethod("bm25")  # Using BM25 scoring method
         logging.debug(f"Search result: {result}")
+        print("Search Results:")
+        for res in result:
+            print(res)
     except AttributeError as e:
         logging.error(f"Error during search: {e}")
-
